@@ -1,6 +1,7 @@
 import itertools
 import random
-
+import heapq
+from constraint import Problem
 
 class Buscaminas():
     """
@@ -34,20 +35,21 @@ class Buscaminas():
         self.minas_encontradas = set()
 
     def imprimir(self):
-        """
-        Imprime una representación en texto
-        de dónde están ubicadas las minas.
-        """
-        for i in range(self.alto):
-            print("--" * self.ancho + "-")
-            for j in range(self.ancho):
-                if self.tablero[i][j]:
-                    print("|X", end="")
-                else:
-                    print("| ", end="")
-            print("|")
-        print("--" * self.ancho + "-")
+     """
+     Imprime una representación en texto
+     de dónde están ubicadas las minas.
+     """
+     for i in range(self.alto):
+         print("--" * self.ancho + "-")
+         for j in range(self.ancho):
+             if self.tablero[i][j]:
+                 print("|X", end="")
+             else:
+                 print("| ", end="")
+         print("|")
+     print("--" * self.ancho + "-")
 
+   
     def es_mina(self, celda):
         i, j = celda
         return self.tablero[i][j]
@@ -82,87 +84,87 @@ class Buscaminas():
         Comprueba si todas las minas han sido marcadas.
         """
         return self.minas_encontradas == self.minas
+
+class BusquedaBuscaminas():
+    def __init__(self, ia, seguras, movimientos_realizados, conocimiento, alto, ancho):
+        self.ia = ia
+        self.seguras = seguras
+        self.movimientos_realizados = movimientos_realizados
+        self.conocimiento = conocimiento
+        self.alto = alto
+        self.ancho = ancho
         
-
-class Sentencia():
-    """
-    Declaración lógica sobre un juego de Buscaminas.
-    Una sentencia consiste en un conjunto de celdas del tablero
-    y un recuento del número de esas celdas que son minas.
-    """
-
-    def __init__(self, celdas, recuento):
-        self.celdas = set(celdas)
-        self.recuento = recuento
-
-    def __eq__(self, other):
-        return self.celdas == other.celdas and self.recuento == other.recuento
-
-    def __str__(self):
-        return f"{self.celdas} = {self.recuento}"
-
-    def minas_conocidas(self):
+    def hacer_movimiento_seguro_aleatorio(self):
         """
-        Devuelve el conjunto de todas las celdas en self.celdas que se sabe que son minas.
+        Devuelve una celda segura para elegir en el tablero de Buscaminas.
+        El movimiento debe ser conocido como seguro y no debe ser un movimiento
+        que ya se haya realizado.
+
+        Esta función puede usar el conocimiento en self.minas, self.seguras
+        y self.movimientos_realizados, pero no debe modificar ninguno de esos valores.
         """
-        if len(self.celdas) == self.recuento:
-            return self.celdas
+        celdas_seguras = self.seguras - self.movimientos_realizados
+        if not celdas_seguras:
+            return None
+        # print(f"Pool: {celdas_seguras}")
+        movimiento = celdas_seguras.pop()
+        return movimiento
+
+    def hacer_movimiento_seguro_estrella(self):
+        """
+        Devuelve una celda segura para elegir en el tablero de Buscaminas utilizando A*.
+        """
+        celdas_seguras = self.ia.seguras - self.ia.movimientos_realizados
+        if not celdas_seguras:
+            return None
+        return self.a_estrella(celdas_seguras)
+
+    def a_estrella(self, celdas_seguras):
+        # Utilizar una cola de prioridad para implementar A*
+        heap = []
+        heapq.heappush(heap, (0, random.choice(tuple(celdas_seguras))))  # Tupla de (costo acumulado, celda)
+
+        while heap:
+            costo_acumulado, celda = heapq.heappop(heap)
+            if celda not in self.ia.movimientos_realizados:
+                return celda
+
+            for vecino in self.ia.obtener_vecinos_celda(celda):
+                if vecino not in self.ia.movimientos_realizados:
+                    costo_estimado = costo_acumulado + 1  # Costo de movimiento, puede ser diferente si consideras pesos en el tablero
+                    heapq.heappush(heap, (costo_estimado, vecino))
+
         return None
-
-    def seguras_conocidas(self):
+    
+    #def hacer_movimiento_seguro_csp(self):
+          
+    
+    def hacer_movimiento_seguro(self, tipo_busqueda):
         """
-        Devuelve el conjunto de todas las celdas en self.celdas que se sabe que son seguras.
+        Devuelve una celda segura para elegir en el tablero de Buscaminas utilizando el tipo de búsqueda especificado.
         """
-        if self.recuento == 0:
-            return self.celdas
-        return None
-
-    def marcar_mina(self, celda):
-        """
-        Actualiza la representación de conocimiento interno dado el hecho de que
-        una celda se sabe que es una mina.
-        """
-        nuevas_celdas = set()
-        for item in self.celdas:
-            if item != celda:
-                nuevas_celdas.add(item)
-            else:
-                self.recuento -= 1
-        self.celdas = nuevas_celdas
-
-    def marcar_segura(self, celda):
-        """
-        Actualiza la representación de conocimiento interno dado el hecho de que
-        una celda se sabe que es segura.
-        """
-        nuevas_celdas = set()
-        for item in self.celdas:
-            if item != celda:
-                nuevas_celdas.add(item)
-        self.celdas = nuevas_celdas
-
-
+        if tipo_busqueda == 1:
+            return self.hacer_movimiento_seguro_aleatorio()
+        elif tipo_busqueda == 2:
+            return self.hacer_movimiento_seguro_estrella()
+        #elif tipo_busqueda == 3:
+        #    return self.hacer_movimiento_seguro_csp()
+        else:
+            raise ValueError("tipo_busqueda no válido")
 
 class BuscaminasIA():
     """
     Jugador del juego Buscaminas
     """
-
     def __init__(self, alto=8, ancho=8):
-
-        # Establecer el alto y ancho inicial
         self.alto = alto
         self.ancho = ancho
-
-        # Llevar un registro de las celdas en las que se ha hecho clic
         self.movimientos_realizados = set()
-
-        # Llevar un registro de celdas conocidas como seguras o minas
         self.minas = set()
         self.seguras = set()
+        self.conocimiento = []  # Aquí se guarda el conocimiento
+        self.busqueda = BusquedaBuscaminas(self, self.seguras, self.movimientos_realizados, self.conocimiento, self.alto, self.ancho)
 
-        # Lista de sentencias sobre el juego conocidas como verdaderas
-        self.conocimiento = []
 
     def marcar_mina(self, celda):
         """
@@ -246,42 +248,29 @@ class BuscaminasIA():
         self.eliminar_duplicados()
         self.eliminar_seguras()
 
-    def hacer_movimiento_seguro(self):
-        """
-        Devuelve una celda segura para elegir en el tablero de Buscaminas.
-        El movimiento debe ser conocido como seguro y no debe ser un movimiento
-        que ya se haya realizado.
-
-        Esta función puede usar el conocimiento en self.minas, self.seguras
-        y self.movimientos_realizados, pero no debe modificar ninguno de esos valores.
-        """
-        celdas_seguras = self.seguras - self.movimientos_realizados
-        if not celdas_seguras:
-            return None
-        # print(f"Pool: {celdas_seguras}")
-        movimiento = celdas_seguras.pop()
-        return movimiento
-
+    def hacer_movimiento(self, tipo_busqueda):
+        return self.busqueda.hacer_movimiento_seguro(tipo_busqueda)
+          
+            
     def hacer_movimiento_aleatorio(self):
-        """
-        Devuelve un movimiento para realizar en el tablero de Buscaminas.
-        Debería elegir aleatoriamente entre celdas que:
-            1) no hayan sido elegidas todavía, y
-            2) no se sabe que son minas
-
-        """
-        todos_movimientos = set()
-        for i in range(self.alto):
-            for j in range(self.ancho):
-                if (i,j) not in self.minas and (i,j) not in self.movimientos_realizados:
-                    todos_movimientos.add((i,j))
-        # No hay movimientos restantes
-        if len(todos_movimientos) == 0:
-            return None
-        # Retornar uno disponible
-        movimiento = random.choice(tuple(todos_movimientos))
-        return movimiento
+       """
+       Devuelve un movimiento para realizar en el tablero de Buscaminas.
+       Debería elegir aleatoriamente entre celdas que:
+           1) no hayan sido elegidas todavía, y
+           2) no se sabe que son minas
+    
+       """
+       todos_movimientos = set()
+       for i in range(self.alto):
+           for j in range(self.ancho):
+               if (i,j) not in self.minas and (i,j) not in self.movimientos_realizados:
+                   todos_movimientos.add((i,j))
+       if len(todos_movimientos) == 0:
+           return None
+       movimiento = random.choice(tuple(todos_movimientos))
+       return movimiento
                
+           
     def obtener_vecinos_celda(self, celda, recuento):
         i, j = celda
         vecinos = []
@@ -319,3 +308,60 @@ class BuscaminasIA():
                     self.marcar_segura(seguraEncontrada)
                 conocimiento_final.pop(-1)
         self.conocimiento = conocimiento_final
+
+class Sentencia():
+    """
+    Declaración lógica sobre un juego de Buscaminas.
+    Una sentencia consiste en un conjunto de celdas del tablero
+    y un recuento del número de esas celdas que son minas.
+    """
+
+    def __init__(self, celdas, recuento):
+        self.celdas = set(celdas)
+        self.recuento = recuento
+
+    def __eq__(self, other):
+        return self.celdas == other.celdas and self.recuento == other.recuento
+
+    def __str__(self):
+        return f"{self.celdas} = {self.recuento}"
+
+    def minas_conocidas(self):
+        """
+        Devuelve el conjunto de todas las celdas en self.celdas que se sabe que son minas.
+        """
+        if len(self.celdas) == self.recuento:
+            return self.celdas
+        return None
+
+    def seguras_conocidas(self):
+        """
+        Devuelve el conjunto de todas las celdas en self.celdas que se sabe que son seguras.
+        """
+        if self.recuento == 0:
+            return self.celdas
+        return None
+
+    def marcar_mina(self, celda):
+        """
+        Actualiza la representación de conocimiento interno dado el hecho de que
+        una celda se sabe que es una mina.
+        """
+        nuevas_celdas = set()
+        for item in self.celdas:
+            if item != celda:
+                nuevas_celdas.add(item)
+            else:
+                self.recuento -= 1
+        self.celdas = nuevas_celdas
+
+    def marcar_segura(self, celda):
+        """
+        Actualiza la representación de conocimiento interno dado el hecho de que
+        una celda se sabe que es segura.
+        """
+        nuevas_celdas = set()
+        for item in self.celdas:
+            if item != celda:
+                nuevas_celdas.add(item)
+        self.celdas = nuevas_celdas
