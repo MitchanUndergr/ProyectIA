@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 
-from minesweeper import Buscaminas, BuscaminasIA
+from buscaminas import Buscaminas, BuscaminasIA
 
 # Definir dimensiones del tablero y cantidad de minas
 ALTO = 8
@@ -277,7 +277,7 @@ while True:
     if autoplay or realizar_movimiento_ia:
         if realizar_movimiento_ia:
             realizar_movimiento_ia = False
-        movimiento = ia.hacer_movimiento_seguro()
+        movimiento = ia.hacer_movimiento(2)
         if movimiento is None:
             movimiento = ia.hacer_movimiento_aleatorio()
             if movimiento is None:
