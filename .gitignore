@@ -1,4 +1,5 @@
 # Exclude vscode and env folders
 .vscode/
 env/
+.venv/
 __pycache__/

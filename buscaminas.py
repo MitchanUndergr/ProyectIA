@@ -1,7 +1,5 @@
-import itertools
 import random
 import heapq
-from constraint import Problem
 
 class Buscaminas():
     """
