@@ -134,6 +134,21 @@ class BusquedaBuscaminas():
 
         return None
     
+    def hacer_movimiento_seguro_heuristicas(self):
+        """
+        Devuelve una celda segura para elegir en el tablero de Buscaminas utilizando heurísticas.
+        """
+        celdas_seguras = self.ia.seguras - self.ia.movimientos_realizados
+        if not celdas_seguras:
+            return None
+        return self.heuristica(celdas_seguras)
+    
+    def heuristica(self, celda):
+        """
+        Devuelve el valor heurístico de una celda en el tablero de Buscaminas.
+        """
+        return 0
+    
     #def hacer_movimiento_seguro_csp(self):
           
     
@@ -145,7 +160,9 @@ class BusquedaBuscaminas():
             return self.hacer_movimiento_seguro_aleatorio()
         elif tipo_busqueda == 2:
             return self.hacer_movimiento_seguro_estrella()
-        #elif tipo_busqueda == 3:
+        elif tipo_busqueda == 3:
+            return self.hacer_movimiento_seguro_heuristicas()
+        #elif tipo_busqueda == 4:
         #    return self.hacer_movimiento_seguro_csp()
         else:
             raise ValueError("tipo_busqueda no válido")
