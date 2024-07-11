@@ -7,7 +7,7 @@ from buscaminas import Buscaminas, BuscaminasIA
 # Definir dimensiones del tablero y cantidad de minas
 ALTO = 8
 ANCHO = 8
-MINAS = 8
+MINAS = 10
 
 # Colores
 NEGRO = (0, 0, 0)
@@ -277,7 +277,7 @@ while True:
     if autoplay or realizar_movimiento_ia:
         if realizar_movimiento_ia:
             realizar_movimiento_ia = False
-        movimiento = ia.hacer_movimiento(2)
+        movimiento = ia.hacer_movimiento(3)
         if movimiento is None:
             movimiento = ia.hacer_movimiento_aleatorio()
             if movimiento is None:

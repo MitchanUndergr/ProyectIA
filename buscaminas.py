@@ -135,19 +135,40 @@ class BusquedaBuscaminas():
         return None
     
     def hacer_movimiento_seguro_heuristicas(self):
-        """
-        Devuelve una celda segura para elegir en el tablero de Buscaminas utilizando heurísticas.
-        """
         celdas_seguras = self.ia.seguras - self.ia.movimientos_realizados
         if not celdas_seguras:
             return None
         return self.heuristica(celdas_seguras)
     
-    def heuristica(self, celda):
-        """
-        Devuelve el valor heurístico de una celda en el tablero de Buscaminas.
-        """
-        return 0
+    def heuristica(self, celdas_seguras):
+        heap = []
+        heapq.heappush(heap, (0, random.choice(tuple(celdas_seguras))))  # Tupla de (costo acumulado, celda)
+        # Initialize the heap
+        while heap:
+            costo_acumulado, celda = heapq.heappop(heap)
+            if celda not in self.ia.movimientos_realizados:
+                return celda
+
+            for vecino in self.ia.obtener_vecinos_celda(celda):
+                if vecino not in self.ia.movimientos_realizados:
+                    # Use calculate_cell_score to determine the priority of this cell
+                    score = self.calculate_cell_score(vecino)
+                    heapq.heappush(heap, (score, vecino))
+        return None
+
+    def calculate_cell_score(self, cell):
+        # Prefer cells with more neighbors in 'seguras' and more unrevealed neighbors
+        safe_neighbors = 0
+        unrevealed_neighbors = 0
+        for neighbor in self.ia.obtener_vecinos_celda(cell):
+            if neighbor in self.ia.seguras:
+                safe_neighbors += 1
+            if neighbor not in self.ia.movimientos_realizados:
+                unrevealed_neighbors += 1
+
+        # Adjust the weights as necessary based on testing and the specific game dynamics
+        score = (safe_neighbors * 2) + unrevealed_neighbors
+        return score
     
     #def hacer_movimiento_seguro_csp(self):
           
