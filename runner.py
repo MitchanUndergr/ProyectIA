@@ -277,7 +277,7 @@ while True:
     if autoplay or realizar_movimiento_ia:
         if realizar_movimiento_ia:
             realizar_movimiento_ia = False
-        movimiento = ia.hacer_movimiento(3)
+        movimiento = ia.hacer_movimiento(2)
         if movimiento is None:
             movimiento = ia.hacer_movimiento_aleatorio()
             if movimiento is None:

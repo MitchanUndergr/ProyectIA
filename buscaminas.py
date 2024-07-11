@@ -120,17 +120,19 @@ class BusquedaBuscaminas():
     def a_estrella(self, celdas_seguras):
         # Utilizar una cola de prioridad para implementar A*
         heap = []
-        heapq.heappush(heap, (0, random.choice(tuple(celdas_seguras))))  # Tupla de (costo acumulado, celda)
-
+        starting_cell = random.choice(tuple(celdas_seguras))
+        heapq.heappush(heap, (0 + self.heuristica(starting_cell), 0, starting_cell))  # (F cost, G cost, cell)
+    
         while heap:
-            costo_acumulado, celda = heapq.heappop(heap)
+            f_cost, g_cost, celda = heapq.heappop(heap)
             if celda not in self.ia.movimientos_realizados:
-                return celda
-
+                return celda  # Found the next cell to reveal
+    
             for vecino in self.ia.obtener_vecinos_celda(celda):
                 if vecino not in self.ia.movimientos_realizados:
-                    costo_estimado = costo_acumulado + 1  # Costo de movimiento, puede ser diferente si consideras pesos en el tablero
-                    heapq.heappush(heap, (costo_estimado, vecino))
+                    new_g_cost = g_cost + 1  # Assuming uniform cost for simplicity
+                    new_f_cost = new_g_cost + self.heuristica(vecino)
+                    heapq.heappush(heap, (new_f_cost, new_g_cost, vecino))
 
         return None
     
